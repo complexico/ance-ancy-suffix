@@ -1,0 +1,70 @@
+---
+title: "ance-ancy-suffix"
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+```{r setup}
+library(tidyverse)
+library(googlesheets4)
+source("datasheet-url.R")
+# dir.create("data-raw")
+```
+
+```{r read-data}
+df <- read_sheet(ss = datasheet)
+```
+
+```{r save-unknown-word, eval = FALSE, include = FALSE}
+# this code generate a list of words that are not analysed in order to check if there are any words skipped while in fact relevant
+df |> 
+  filter(is.na(ROOT)) |> 
+  select(FORM, ROOT) |> 
+  distinct() |> 
+  mutate(ROOT = replace_na(ROOT, "")) # |> 
+  # write_excel_csv2("data-raw/unanalysed.csv")
+```
+
+Try the current analysed data
+
+```{r retrieve-relevant-data}
+df_ok <- filter(df, !is.na(ROOT))
+df_ok
+```
+
+Run productivity analysis per suffix.
+
+```{r productivity-by-affix}
+df_ok |> 
+  group_by(SUFFIX) |> 
+  mutate(is_hapax = if_else(FREQ == 1, TRUE, FALSE)) |> 
+  summarise(n_type = n_distinct(FORM),
+            n_token = sum(FREQ),
+            n_hapax = sum(is_hapax))
+```
+
+Run productivity analysis by genres.
+
+```{r productivity-by-genre}
+ance <- df_ok |> 
+  filter(SUFFIX == "ance")
+ancy <- df_ok |> 
+  filter(SUFFIX == "ancy")
+
+ance_prod <- ance |> 
+  group_by(GENRE) |> 
+  mutate(is_hapax = if_else(FREQ == 1, TRUE, FALSE)) |> 
+  summarise(n_type = n_distinct(FORM),
+            n_token = sum(FREQ),
+            n_hapax = sum(is_hapax))
+
+ancy_prod <- ancy |> 
+  group_by(GENRE) |> 
+  mutate(is_hapax = if_else(FREQ == 1, TRUE, FALSE)) |> 
+  summarise(n_type = n_distinct(FORM),
+            n_token = sum(FREQ),
+            n_hapax = sum(is_hapax))
+
+```
