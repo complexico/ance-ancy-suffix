@@ -9,12 +9,28 @@ Quarto enables you to weave together content and executable code into a finished
 ```{r setup}
 library(tidyverse)
 library(googlesheets4)
+library(googledrive)
 source("datasheet-url.R")
 # dir.create("data-raw")
+# dir.create("figures")
+
+# googledrive::drive_mkdir("figures", path = drive_main_folder)
+# Created Drive file:
+# • figures <id: 18ppX_-Nr-dI-iQojYC5WHpGZi_dKojhA>
+# With MIME type:
+# • application/vnd.google-apps.folder
+
+# googledrive::drive_mkdir("stats-output", path = drive_main_folder)
+# Created Drive file:
+# • stats-output <id: 1e_0dwXEH_qTTzUdDGNxI_LHQSFIS98qj>
+# With MIME type:
+# • application/vnd.google-apps.folder
 ```
 
 ```{r read-data}
-df <- read_sheet(ss = datasheet)
+# df <- read_sheet(ss = datasheet) <- run this regularly to check update
+# write_rds(df, "data-raw/ance-ancy.rds")
+df <- read_rds("data-raw/ance-ancy.rds")
 ```
 
 ```{r save-unknown-word, eval = FALSE, include = FALSE}
@@ -36,13 +52,47 @@ df_ok
 
 Run productivity analysis per suffix.
 
-```{r productivity-by-affix}
-df_ok |> 
+```{r productivity-by-affix, message = FALSE, warning = FALSE}
+# drive_create("productivity-by-affix",
+#              path = as_id("1e_0dwXEH_qTTzUdDGNxI_LHQSFIS98qj"),
+#              type = "spreadsheet")
+# Created Drive file:
+# • productivity-by-affix <id: 1g9fw5PVUrSiR9TGA9tQlOBPektaZJaVMqBK7_wwAIOs>
+# With MIME type:
+# • application/vnd.google-apps.spreadsheet
+
+
+prod_by_affix <- df_ok |> 
+  
+  # remove GENRE to re-calculate frequency of suffixes and their hapax
+  select(-GENRE) |> 
+  
+  # to sum token frequency
+  group_by(FORM, SUFFIX, ROOT) |> 
+  summarise(n_token = sum(FREQ), .groups = "drop") |> 
+  
+  # determine the hapax
+  mutate(is_hapax = if_else(n_token == 1, TRUE, FALSE)) |> 
+  
+  # to run productivity analysis
   group_by(SUFFIX) |> 
-  mutate(is_hapax = if_else(FREQ == 1, TRUE, FALSE)) |> 
   summarise(n_type = n_distinct(FORM),
-            n_token = sum(FREQ),
-            n_hapax = sum(is_hapax))
+            n_token = sum(n_token),
+            n_hapax = sum(is_hapax),
+            hapax_per_token_ratio = n_hapax/n_token)
+
+prod_by_affix |> 
+  knitr::kable(col.names = c("Suffix", "Type Freq.", "Token Freq.", "No. Hapax", "Hapax per Token Ratio"))
+
+prod_by_affix |> 
+  rename(Suffix = SUFFIX,
+         `Type Freq.` = n_type,
+         `Token Freq.` = n_token,
+         `No. of Hapax` = n_hapax,
+         `Hapax per token ratio` = hapax_per_token_ratio) |> 
+  write_sheet(ss = "1g9fw5PVUrSiR9TGA9tQlOBPektaZJaVMqBK7_wwAIOs",
+              sheet = "Sheet1")
+
 ```
 
 Run productivity analysis by genres.
@@ -50,21 +100,103 @@ Run productivity analysis by genres.
 ```{r productivity-by-genre}
 ance <- df_ok |> 
   filter(SUFFIX == "ance")
+
+ance_word_freq <- ance |> 
+  group_by(FORM) |> 
+  summarise(FREQ = sum(FREQ))
+
 ancy <- df_ok |> 
   filter(SUFFIX == "ancy")
 
+ancy_word_freq <- ancy |> 
+  group_by(FORM) |> 
+  summarise(FREQ = sum(FREQ))
+
 ance_prod <- ance |> 
   group_by(GENRE) |> 
+  
+  # determine the hapax in a given genre
   mutate(is_hapax = if_else(FREQ == 1, TRUE, FALSE)) |> 
   summarise(n_type = n_distinct(FORM),
             n_token = sum(FREQ),
-            n_hapax = sum(is_hapax))
+            n_hapax = sum(is_hapax)) |> 
+  ungroup() |> 
+  mutate(suffix = "ancy")
 
 ancy_prod <- ancy |> 
   group_by(GENRE) |> 
+  
+  # determine the hapax in a given genre
   mutate(is_hapax = if_else(FREQ == 1, TRUE, FALSE)) |> 
   summarise(n_type = n_distinct(FORM),
             n_token = sum(FREQ),
-            n_hapax = sum(is_hapax))
+            n_hapax = sum(is_hapax)) |> 
+  ungroup() |> 
+  mutate(suffix = "ance")
 
+genre_prod <- bind_rows(ance_prod, ancy_prod)
+
+```
+
+```{r fig-productivity-by-genre}
+
+genre_prod |> 
+  mutate(suffix = str_c("-", suffix, sep = "")) |> 
+  ggplot(aes(x = GENRE, y = n_type, fill = suffix)) + 
+  geom_col(position = position_dodge(width = .9)) +
+  coord_flip() +
+  theme_light(base_family = "serif") +
+  labs(y = "Type frequency",
+       fill = "Suffix",
+       x = "Genre") +
+  theme(legend.text = element_text(size = 13),
+        legend.title = element_text(size = 17),
+        axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text.x = element_text(size = 13)) +
+  scale_fill_discrete(breaks = c("-ancy", "-ance"))
+ggsave("figures/prod-by-genre.png", width = 6.5, height = 4.5, dpi = 300,
+       units = "in")
+
+googledrive::drive_upload("figures/prod-by-genre.png",
+                          path = as_id("18ppX_-Nr-dI-iQojYC5WHpGZi_dKojhA"),
+                          name = "productivity-by-genre.png")
+
+```
+
+Check the shared and distinct bases. This is operationalised via stripping off the -*ance* and -*ancy* strings from the FORM column.
+
+```{r bases-sharing-or-distinct}
+ance_form <- ance_word_freq |> 
+  mutate(BASE = str_replace(FORM, "ANCE$", ""),
+         suffix = "ance")
+
+ancy_form <- ancy_word_freq |> 
+  mutate(BASE = str_replace(FORM, "ANCY$", ""),
+         suffix = "ancy")
+
+all_ance_ancy <- bind_rows(ance_form, ancy_form)
+
+all_bases <- unique(c(ance_form$BASE, ancy_form$BASE))
+
+shared_ance_ancy <- intersect(ance_form$BASE, ancy_form$BASE)
+shared_ance_ancy_prop <- round((length(shared_ance_ancy)/length(all_bases)) * 100, 2)
+
+only_ance <- setdiff(ance_form$BASE, ancy_form$BASE)
+only_ance_prop <- round((length(only_ance)/length(all_bases)) * 100, 2)
+
+only_ancy <- setdiff(ancy_form$BASE, ance_form$BASE)
+only_ancy_prop <- round((length(only_ancy)/length(all_bases)) * 100, 2)
+```
+
+Out of the total `r length(all_bases)` bases, only `r shared_ance_ancy_prop`% (i.e., `r length(shared_ance_ancy)` bases) are shared (i.e., appear with -*ance* and -*ancy*) but the frequency of occurrence of these shared bases with the suffixes are not equal.
+
+```{r bases-sharing-table, message = FALSE, warning = FALSE}
+all_ance_ancy |> 
+  filter(BASE %in% shared_ance_ancy) |> 
+  select(-FORM) |> 
+  pivot_wider(names_from = "suffix", values_from = "FREQ") |> 
+  mutate(BASE = str_c(BASE, "ANC(E/Y)", sep = "")) |> 
+  arrange(desc(ancy)) |> 
+  knitr::kable()
 ```
