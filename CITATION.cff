@@ -1,0 +1,34 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Supplementary materials for the corpus-based study of
+  English suffixes -ance and -ancy
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Ni Ketut
+    family-names: Budiani
+    email: niketutbudiani2@gmail.com
+    affiliation: Udayana University
+  - given-names: Gede Primahadi Wijaya
+    family-names: Rajeg
+    email: primahadi_wijaya@unud.ac.id
+    affiliation: Udayana University
+    orcid: 'https://orcid.org/0000-0002-2047-8621'
+identifiers:
+  - type: url
+    value: 'https://osf.io/7yj49/'
+    description: OSF repository
+repository-code: 'https://github.com/complexico/ance-ancy-suffix'
+keywords:
+  - morphology
+  - English morphology
+  - morphological productivity
+  - rival affixes
+  - corpus linguistics
+license: CC-BY-NC-SA-4.0
+date-released: '2025-05-21'
