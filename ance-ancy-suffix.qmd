@@ -51,19 +51,21 @@ df |>
 ```
 
 ```{r combine-gsheet-and-unanalysed}
-df_combined <- df |> 
-  left_join(unanalysed1,
-            by = join_by(FORM))|> 
-  mutate(ROOT = if_else(!is.na(ROOT_new),
-                        ROOT_new,
-                        ROOT),
-         ETYMOLOGY = if_else(!is.na(ETYMOLOGY_new),
-                             ETYMOLOGY_new,
-                             ETYMOLOGY),
-         SUFFIX = if_else(!is.na(SUFFIX_new),
-                          SUFFIX_new,
-                          SUFFIX)) |> 
-  select(!matches("_new"))
+# df_combined <- df |> 
+#   left_join(unanalysed1,
+#             by = join_by(FORM))|> 
+#   mutate(ROOT = if_else(!is.na(ROOT_new),
+#                         ROOT_new,
+#                         ROOT),
+#          ETYMOLOGY = if_else(!is.na(ETYMOLOGY_new),
+#                              ETYMOLOGY_new,
+#                              ETYMOLOGY),
+#          SUFFIX = if_else(!is.na(SUFFIX_new),
+#                           SUFFIX_new,
+#                           SUFFIX)) |> 
+#   select(!matches("_new"))
+
+df_combined <- df
 ```
 
 
@@ -72,7 +74,7 @@ Try the current analysed data
 ```{r retrieve-relevant-data}
 df_ok <- filter(df_combined, !is.na(ROOT))
 # df_ok <- filter(df, !is.na(ROOT))
-df_ok
+df_ok |> slice_sample(n = 10)
 ```
 
 Run productivity analysis per suffix.
@@ -224,7 +226,7 @@ all_ance_ancy_tb <- all_ance_ancy |>
   mutate(BASE = str_c(BASE, "ANC(E/Y)", sep = "")) |> 
   arrange(desc(ancy))
 
-write_tsv(all_ance_ancy_tb, "all_ance_ancy_tb.tsv")
+write_tsv(all_ance_ancy_tb, "data-out/all_ance_ancy_tb.tsv")
 
 all_ance_ancy_tb |> 
   knitr::kable()
