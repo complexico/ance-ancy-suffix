@@ -10,6 +10,7 @@ Quarto enables you to weave together content and executable code into a finished
 library(tidyverse)
 library(googlesheets4)
 library(googledrive)
+library(broom)
 source("datasheet-url.R")
 # dir.create("data-raw")
 # dir.create("figures")
@@ -229,5 +230,26 @@ all_ance_ancy_tb <- all_ance_ancy |>
 write_tsv(all_ance_ancy_tb, "data-out/all_ance_ancy_tb.tsv")
 
 all_ance_ancy_tb |> 
+  arrange(BASE) |> 
   knitr::kable()
 ```
+
+
+# Binomial test
+
+```{r binom}
+all_ance_ancy_tb_binom <- all_ance_ancy_tb |> 
+  mutate(binom = map2(ance, 
+                      ancy, 
+                      ~binom.test(.x,
+                                  sum(c(.x, .y)),
+                                  .5))) |> 
+  mutate(binom = map(binom, ~tidy(.))) |> 
+  unnest_wider(binom) |> 
+  mutate(p_holm = p.adjust(p.value, method = "holm")) |> 
+  arrange(BASE) |> 
+  mutate(across(matches("(^estimate|^conf)"), ~round(., digits = 4)))
+all_ance_ancy_tb_binom
+write_tsv(all_ance_ancy_tb_binom, file = "data-out/interchangeable-binom-test.tsv")
+```
+
