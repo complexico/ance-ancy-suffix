@@ -16,18 +16,22 @@ author:
   - name:
       given: Gede Primahadi Wijaya
       family: Rajeg
+    orcid: 0000-0002-2047-8621
     affiliation:
       - ref: complexico
       - ref: boel
   - name:
       given: I Made
       family: Netra
+    orcid: 0000-0001-7186-2896
     affiliation:
       - ref: boel
 license: "CC BY-NC-SA"
 citation:
   type: software
   title: "R notebook for the corpus-based study of English suffixes -<i>ance</i> and -<i>ancy</i>"
+  doi: "10.17605/OSF.IO/7YJ49"
+  url: https://complexico.github.io/ance-ancy-suffix/
 google-scholar: true
 ---
 
@@ -264,7 +268,7 @@ all_ance_ancy_tb |>
 
 # Binomial test
 
-```{r binom}
+```{r binom, warning = FALSE}
 all_ance_ancy_tb_binom <- all_ance_ancy_tb |> 
   mutate(binom = map2(ance, 
                       ancy, 
