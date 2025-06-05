@@ -1,12 +1,37 @@
 ---
-title: "ance-ancy-suffix"
+title: "R notebook for the corpus-based study of English suffixes -*ance* and -*ancy*"
+date: 2025-03-18
+author:
+  - name:
+      given: Ni Ketut
+      family: Budiani
+      corresponding: true
+    affiliation:
+      - id: complexico
+        name: Computer-assisted Lexicology and Lexicography (CompLexico) research group, CIRHSS, Udayana University
+        url: https://www.cirhss.org/complexico/
+      - id: boel
+        name: Bachelor of English Literature (BoEL), Faculty of Humanities, Udayana University
+        url: https://sasing.unud.ac.id/
+  - name:
+      given: Gede Primahadi Wijaya
+      family: Rajeg
+    affiliation:
+      - ref: complexico
+      - ref: boel
+  - name:
+      given: I Made
+      family: Netra
+    affiliation:
+      - ref: boel
+license: "CC BY-NC-SA"
+citation:
+  type: software
+  title: "R notebook for the corpus-based study of English suffixes -<i>ance</i> and -<i>ancy</i>"
+google-scholar: true
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-```{r setup}
+```{r setup, echo = FALSE}
 library(tidyverse)
 library(googlesheets4)
 library(googledrive)
@@ -120,6 +145,8 @@ prod_by_affix |>
 #          `Hapax per token ratio` = hapax_per_token_ratio) |> 
 #   write_sheet(ss = "1g9fw5PVUrSiR9TGA9tQlOBPektaZJaVMqBK7_wwAIOs",
 #               sheet = "Sheet1")
+
+write_tsv(prod_by_affix, file = "data-out/productivity_overall_by_affix.tsv")
 
 ```
 
@@ -249,7 +276,8 @@ all_ance_ancy_tb_binom <- all_ance_ancy_tb |>
   mutate(p_holm = p.adjust(p.value, method = "holm")) |> 
   arrange(BASE) |> 
   mutate(across(matches("(^estimate|^conf)"), ~round(., digits = 4)))
-all_ance_ancy_tb_binom
+all_ance_ancy_tb_binom |> 
+  knitr::kable(caption = "Binomial tests for base distribution between -*ance* and -*ancy*")
 write_tsv(all_ance_ancy_tb_binom, file = "data-out/interchangeable-binom-test.tsv")
 ```
 
