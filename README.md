@@ -22,3 +22,11 @@ co-supervisors, respectively).
 > -*ancy* \[Computer software\].
 > <https://github.com/complexico/ance-ancy-suffix>
 > <https://doi.org/10.17605/OSF.IO/7YJ49>
+
+As of the 28<sup>th</sup> of May 2025, the article, titled “Productivity
+and Distribution of Nominal Suffixes -*ance* and -*ancy* in the Corpus
+of Contemporary American English” is under review in *LET: Linguistics,
+Literature and English Teaching Journal*.
+
+The online R notebook containing codes to run the analyses can be
+accessed at <https://complexico.github.io/ance-ancy-suffix/>.

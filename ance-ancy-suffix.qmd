@@ -57,6 +57,12 @@ source("datasheet-url.R")
 # • application/vnd.google-apps.folder
 ```
 
+# Overview
+
+As of the 28^th^ of May 2025, the article, titled "Productivity and Distribution of Nominal Suffixes -*ance* and -*ancy* in the Corpus of Contemporary American English" is under review in *LET: Linguistics, Literature and English Teaching Journal*.
+
+# Data preparation
+
 ```{r read-data}
 # df <- read_sheet(ss = datasheet) <- run this regularly to check update
 # write_rds(df, "data-raw/ance-ancy.rds")
@@ -107,9 +113,14 @@ df_ok <- filter(df_combined, !is.na(ROOT))
 df_ok |> slice_sample(n = 10)
 ```
 
-Run productivity analysis per suffix.
+# Productivity analysis
+
+Run productivity analysis per suffix (@tbl-prod-overall).
 
 ```{r productivity-by-affix, message = FALSE, warning = FALSE}
+#| label: tbl-prod-overall
+#| tbl-cap: "Productivity measures of -*ance* and -*ancy*"
+
 # drive_create("productivity-by-affix",
 #              path = as_id("1e_0dwXEH_qTTzUdDGNxI_LHQSFIS98qj"),
 #              type = "spreadsheet")
@@ -154,7 +165,7 @@ write_tsv(prod_by_affix, file = "data-out/productivity_overall_by_affix.tsv")
 
 ```
 
-Run productivity analysis by genres.
+Run productivity analysis by genres using the type frequency measure (@fig-prod-by-genre).
 
 ```{r productivity-by-genre}
 ance <- df_ok |> 
@@ -198,6 +209,8 @@ genre_prod <- bind_rows(ance_prod, ancy_prod)
 ```
 
 ```{r fig-productivity-by-genre}
+#| label: fig-prod-by-genre
+#| fig-cap: "Type Frequency of each suffix across the COCA's genres"
 
 genre_prod |> 
   mutate(suffix = str_c("-", suffix, sep = "")) |> 
@@ -223,7 +236,9 @@ genre_prod |>
 
 ```
 
-Check the shared and distinct bases. This is operationalised via stripping off the -*ance* and -*ancy* strings from the FORM column.
+# Interchangeability of the base/root
+
+Check the shared and distinct bases (@tbl-shared-base). This is operationalised via stripping off the -*ance* and -*ancy* strings from the FORM column.
 
 ```{r bases-sharing-or-distinct}
 ance_form <- ance_word_freq |> 
@@ -251,6 +266,9 @@ only_ancy_prop <- round((length(only_ancy)/length(all_bases)) * 100, 2)
 Out of the total `r length(all_bases)` bases, only `r shared_ance_ancy_prop`% (i.e., `r length(shared_ance_ancy)` bases) are shared (i.e., appear with -*ance* and -*ancy*) but the frequency of occurrence of these shared bases with the suffixes are not equal.
 
 ```{r bases-sharing-table, message = FALSE, warning = FALSE}
+#| label: tbl-shared-base
+#| tbl-cap: "Token frequencies of the shared base between each suffix" 
+
 all_ance_ancy_tb <- all_ance_ancy |> 
   filter(BASE %in% shared_ance_ancy) |> 
   select(-FORM) |> 
@@ -269,6 +287,9 @@ all_ance_ancy_tb |>
 # Binomial test
 
 ```{r binom, warning = FALSE}
+#| label: tbl-binom
+#| tbl-cap: "Binomial tests for the shared base distribution between -*ance* and -*ancy*"
+
 all_ance_ancy_tb_binom <- all_ance_ancy_tb |> 
   mutate(binom = map2(ance, 
                       ancy, 
@@ -281,7 +302,7 @@ all_ance_ancy_tb_binom <- all_ance_ancy_tb |>
   arrange(BASE) |> 
   mutate(across(matches("(^estimate|^conf)"), ~round(., digits = 4)))
 all_ance_ancy_tb_binom |> 
-  knitr::kable(caption = "Binomial tests for base distribution between -*ance* and -*ancy*")
+  knitr::kable()
 write_tsv(all_ance_ancy_tb_binom, file = "data-out/interchangeable-binom-test.tsv")
 ```
 
