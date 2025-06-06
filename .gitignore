@@ -3,5 +3,5 @@
 .RData
 .Ruserdata
 datasheet-url.R
-
+.DS_Store
 /.quarto/
